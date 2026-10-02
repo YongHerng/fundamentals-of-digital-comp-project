@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <iomanip>
 using namespace std;
 
 struct Meeting {
@@ -195,6 +196,68 @@ void joinMeeting(Meeting meeting, vector<Participant> &participantsList){
     cout << "Estimated Data Usage: " << usage << " GB" << endl;
 }
 
+void checkInternet(){
+    cout << endl << "= = = = Check Internet Readiness = = = =" << endl;
+
+    float internetSpeed = readFloat("Internet speed (Mbps) (0.1~1000): ", 0.1, 1000);
+    bool cameraOn = readYesNo("Do you intend to use camera? [Y/N]: ");
+    int duration = readNum("Planned meeting duration in minutes: ", 1, 100);
+
+    cout << "Connection Result: " << checkConnection(internetSpeed) << endl;
+    
+    float usage = dataUsage(internetSpeed, cameraOn, duration);
+    cout << "Estimated Data Usage: " << usage << " GB" << endl;
+}
+
+void meetingSummary(Meeting meeting, vector<Participant> participantsList) {
+    cout << endl << "= = = = Meeting Summary = = = =" << endl;
+    
+    if(!meeting.scheduled){
+        cout << "Currently no meeting has been scheduled yet!" << endl;
+        return;
+    }
+
+    cout << "Meeting Topic: " << meeting.topic << endl;
+    cout << "Meeting ID: " << meeting.id << endl;
+    cout << "Duration: " << meeting.duration << " minutes" << endl;
+    cout << "Total Participant(s): " << participantsList.size() << "/" << meeting.totalParticipants << endl;
+    cout << "Waiting Room: " << (meeting.enableWaitingRoom ? "Enabled" : "Disabled") << endl;
+
+    if(participantsList.empty()){
+        cout << "No one have joined the meeting yet..." << endl;
+        return;
+    }
+
+    int micOnCount = 0;
+    int cameraOnCount = 0;
+
+    cout << endl << "Participant(s) Details" << endl;
+    cout << left 
+         << setw(20) << "Name" 
+         << setw(12) << "Microphone" 
+         << setw(10) << "Camera" 
+         << setw(20) << "Internet Speed" << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+
+    for(Participant participant : participantsList){
+        if(participant.micOn){
+            micOnCount++;
+        }
+        if(participant.cameraOn){
+            cameraOnCount++;
+        }
+
+        cout << left 
+             << setw(20) << participant.name 
+             << setw(12) << (participant.micOn ? "On" : "Off") 
+             << setw(10) << (participant.cameraOn ? "On" : "Off") 
+             << fixed << setprecision(2) << participant.internetSpeed << " Mbps" << endl;
+    }
+
+    cout << "Microphone enabled: " << micOnCount << endl;
+    cout << "Camera enabled: " << cameraOnCount << endl;
+}
+
 void mainMenu(){
     cout << "====================================" << endl;
     cout << "*      Zoom Meeting Assistant      *" << endl;
@@ -226,11 +289,11 @@ int main(){
                 break;
 
             case 3:
-                // check internet readiness
+                checkInternet();
                 break;
 
             case 4:
-                // Meeting summary
+                meetingSummary(meeting, participantsList);
                 break;
         
             case 5:
