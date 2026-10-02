@@ -206,17 +206,18 @@ void joinMeeting(Meeting meeting, vector<Participant> &participantsList){
     participantsList.push_back(participant);
 
     if(meeting.enableWaitingRoom){
+        cout << endl;
         cout << participant.name << " has been placed in the meeting room." << endl;
         cout << "The host has admitted the participant!" << endl;
     }
 
     cout << endl;
-    cout << "= = = = Meeting Info = = = =" << endl;
+    cout << "= = = = = = = Meeting Info = = = = = = =" << endl;
     cout << participant.name << " joined the meeting!" << endl;
     cout << "Connection Result: " << checkConnection(participant.internetSpeed) << endl;
     float usage = dataUsage(participant.internetSpeed, participant.cameraOn, meeting.duration); 
     cout << "Estimated Data Usage: " << fixed << setprecision(2) << usage << " GB" << endl;
-        cout << "= = = = = = = = = = = = =" << endl;
+    cout << "= = = = = = = = = = = = = = = = = = = = =" << endl;
     cout << endl;
 }
 
@@ -272,7 +273,7 @@ void meetingSummary(Meeting meeting, vector<Participant> participantsList) {
              << fixed << setprecision(2) << participant.internetSpeed << " Mbps" << endl;
     }
     cout << "---------------------------------------------------------------------" << endl;
-    cout << endl << endl;
+    cout << endl;
     cout << "= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =" << endl;
     cout << endl;
 }
