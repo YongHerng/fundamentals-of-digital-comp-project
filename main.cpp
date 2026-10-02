@@ -5,6 +5,7 @@
 #include <string>
 #include <random>
 #include <iomanip>
+#include <limits>
 using namespace std;
 
 struct Meeting {
@@ -37,6 +38,7 @@ bool readYesNo(string text){
         }
 
         cout << "Please enter Y or N only!" << endl;
+        cout << endl;
     }
 }
 
@@ -52,6 +54,7 @@ string readString(string text){
         }
 
         cout << "Input cannot be empty!" << endl;
+        cout << endl;
     }
 }
 
@@ -59,13 +62,16 @@ int readNum(string text, int min, int max){
     int input;
     while(true){
         cout << text;
-        cin >> input;
 
-        if(input >= min && input <= max){
+        if(cin >> input && input >= min && input <= max){
             return input;
         }
 
         cout << "Please enter a number from " << min << " to " << max << "!" << endl;
+        cout << endl;
+
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
 
@@ -73,13 +79,16 @@ float readFloat(string text, float min, float max){
     float input;
     while(true){
         cout << text;
-        cin >> input;
 
-        if(input >= min && input <= max){
+        if(cin >> input && input >= min && input <= max){
             return input;
         }
 
         cout << "Please enter value from " << min << " to " << max << "!" << endl;
+        cout << endl;
+
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
 
@@ -108,8 +117,10 @@ void scheduleMeeting(Meeting &meeting, vector<Participant> &participants){
         cout << "A Meeting has been scheduled" << endl;
         choice = readYesNo("Do you want to replace the current meeting? (Y/N): "); 
         if(!choice){
+            cout << "= = = = = = = = = = = = = = = = = =" << endl;
             return;
         }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         participants.clear();
     }
 
@@ -121,12 +132,15 @@ void scheduleMeeting(Meeting &meeting, vector<Participant> &participants){
     meeting.id = generateCode();
     meeting.scheduled = true;
 
+    cout << endl;
     cout << "= = = = Meeting Scheduled Successfully = = = =" << endl;
     cout << "Topic: " << meeting.topic << endl;
     cout << "Meeting ID: " << meeting.id << endl;
     cout << "Duration: " << meeting.duration << " minutes" << endl;
     cout << "Total Participants: " << meeting.totalParticipants << endl;
     cout << "Waiting Room: " << (meeting.enableWaitingRoom ? "Enabled" : "Disabled") << endl;
+    cout << "= = = = = = = = = = = = = = = = = = = = = = = =" << endl;
+    cout << endl;
 }
 
 string checkConnection(float internetSpeed){
@@ -167,11 +181,13 @@ void joinMeeting(Meeting meeting, vector<Participant> &participantsList){
     
     if(!meeting.scheduled){
         cout << "Currently no meeting has been scheduled yet!" << endl;
+        cout << endl;
         return;
     }
 
-    if(participantsList.size() >= meeting.totalParticipants){
+    if(participantsList.size() >= static_cast<size_t>(meeting.totalParticipants)){
         cout << "Meeting room is full!" << endl;
+        cout << endl;
         return;
     }
 
@@ -182,18 +198,26 @@ void joinMeeting(Meeting meeting, vector<Participant> &participantsList){
         }
     }while(meetingId != meeting.id);
 
-    participant.name = readString("Participant name: ");
-    participant.micOn = readYesNo("Turn on the microphone? [Y/N]: ");
-    participant.cameraOn = readYesNo("Turn on the camera? [Y/N]: ");
-    participant.internetSpeed = readFloat("Internet speed (Mbps) (0.1~1000): ", 0.1, 1000);
+    participant.name = readString("Participant Name: ");
+    participant.micOn = readYesNo("Turn on the Microphone? [Y/N]: ");
+    participant.cameraOn = readYesNo("Turn on the Camera? [Y/N]: ");
+    participant.internetSpeed = readFloat("Internet Speed (Mbps) (0.1~1000): ", 0.1, 1000);
 
     participantsList.push_back(participant);
 
-    cout << endl << "= = = = Meeting Info = = = =" << endl;
+    if(meeting.enableWaitingRoom){
+        cout << participant.name << " has been placed in the meeting room." << endl;
+        cout << "The host has admitted the participant!" << endl;
+    }
+
+    cout << endl;
+    cout << "= = = = Meeting Info = = = =" << endl;
     cout << participant.name << " joined the meeting!" << endl;
     cout << "Connection Result: " << checkConnection(participant.internetSpeed) << endl;
     float usage = dataUsage(participant.internetSpeed, participant.cameraOn, meeting.duration); 
-    cout << "Estimated Data Usage: " << usage << " GB" << endl;
+    cout << "Estimated Data Usage: " << fixed << setprecision(2) << usage << " GB" << endl;
+        cout << "= = = = = = = = = = = = =" << endl;
+    cout << endl;
 }
 
 void checkInternet(){
@@ -203,10 +227,13 @@ void checkInternet(){
     bool cameraOn = readYesNo("Do you intend to use camera? [Y/N]: ");
     int duration = readNum("Planned meeting duration in minutes: ", 1, 100);
 
+    cout << endl;
+    cout << "= = = = = = = Internet Readiness = = = = = = =" << endl;
     cout << "Connection Result: " << checkConnection(internetSpeed) << endl;
-    
     float usage = dataUsage(internetSpeed, cameraOn, duration);
-    cout << "Estimated Data Usage: " << usage << " GB" << endl;
+    cout << "Estimated Data Usage: " << fixed << setprecision(2) << usage << " GB" << endl;
+    cout << "= = = = = = = = = = = = = = = = = = = = = = = =" << endl;
+    cout << endl;
 }
 
 void meetingSummary(Meeting meeting, vector<Participant> participantsList) {
@@ -220,7 +247,7 @@ void meetingSummary(Meeting meeting, vector<Participant> participantsList) {
     cout << "Meeting Topic: " << meeting.topic << endl;
     cout << "Meeting ID: " << meeting.id << endl;
     cout << "Duration: " << meeting.duration << " minutes" << endl;
-    cout << "Total Participant(s): " << participantsList.size() << "/" << meeting.totalParticipants << endl;
+    cout << "Joined Participant(s): " << participantsList.size() << " out of " << meeting.totalParticipants << endl;
     cout << "Waiting Room: " << (meeting.enableWaitingRoom ? "Enabled" : "Disabled") << endl;
 
     if(participantsList.empty()){
@@ -228,34 +255,26 @@ void meetingSummary(Meeting meeting, vector<Participant> participantsList) {
         return;
     }
 
-    int micOnCount = 0;
-    int cameraOnCount = 0;
-
     cout << endl << "Participant(s) Details" << endl;
+    cout << "---------------------------------------------------------------------" << endl;
     cout << left 
-         << setw(20) << "Name" 
+         << setw(15) << "Name" 
          << setw(12) << "Microphone" 
          << setw(10) << "Camera" 
-         << setw(20) << "Internet Speed" << endl;
+         << setw(15) << "Internet Speed" << endl;
     cout << "---------------------------------------------------------------------" << endl;
 
     for(Participant participant : participantsList){
-        if(participant.micOn){
-            micOnCount++;
-        }
-        if(participant.cameraOn){
-            cameraOnCount++;
-        }
-
         cout << left 
-             << setw(20) << participant.name 
+             << setw(15) << participant.name 
              << setw(12) << (participant.micOn ? "On" : "Off") 
              << setw(10) << (participant.cameraOn ? "On" : "Off") 
              << fixed << setprecision(2) << participant.internetSpeed << " Mbps" << endl;
     }
-
-    cout << "Microphone enabled: " << micOnCount << endl;
-    cout << "Camera enabled: " << cameraOnCount << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+    cout << endl << endl;
+    cout << "= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =" << endl;
+    cout << endl;
 }
 
 void mainMenu(){
@@ -297,8 +316,8 @@ int main(){
                 break;
         
             case 5:
-                cout << endl << "Thank you for using the Zoom Meeting Assisteant!!";
-                exit(0);
+                cout << endl << "Thank you for using the Zoom Meeting Assistant!!" << endl;
+                return 0;
         }
     }
 }
