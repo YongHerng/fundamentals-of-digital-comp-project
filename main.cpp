@@ -17,9 +17,9 @@ struct Meeting {
 
 struct Participant {
     string name;
-    bool microphoneOn;
+    bool micOn;
     bool cameraOn;
-    double internetSpeedMbps;
+    double internetSpeed;
 };
 
 bool readYesNo(string text){
@@ -40,7 +40,6 @@ bool readYesNo(string text){
 }
 
 string readString(string text){
-    cin.ignore();
     string input;
 
     while(true){
@@ -69,6 +68,20 @@ int readNum(string text, int min, int max){
     }
 }
 
+float readFloat(string text, float min, float max){
+    float input;
+    while(true){
+        cout << text;
+        cin >> input;
+
+        if(input >= min && input <= max){
+            return input;
+        }
+
+        cout << "Please enter value from " << min << " to " << max << "!" << endl;
+    }
+}
+
 string generateCode(){
     const int length = 6;
     const string characters = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -85,7 +98,8 @@ string generateCode(){
     return code;
 }
 
-void schedule(Meeting &meeting, vector<Participant> &participants){
+void scheduleMeeting(Meeting &meeting, vector<Participant> &participants){
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     bool choice;
     cout << endl << "= = = = Schedule a Meeting = = = =" << endl;
 
@@ -101,7 +115,7 @@ void schedule(Meeting &meeting, vector<Participant> &participants){
     meeting.topic = readString("Meeting Topic: ");
     meeting.duration = readNum("Meeting Duration in Minutes (1~150): ", 1, 150);
     meeting.totalParticipants = readNum("Total Participants (1~100): ", 1, 100);
-    meeting.enableWaitingRoom = readYesNo("Enable Waiting Room?: ");
+    meeting.enableWaitingRoom = readYesNo("Enable Waiting Room? [Y/N]: ");
     
     meeting.id = generateCode();
     meeting.scheduled = true;
@@ -112,6 +126,73 @@ void schedule(Meeting &meeting, vector<Participant> &participants){
     cout << "Duration: " << meeting.duration << " minutes" << endl;
     cout << "Total Participants: " << meeting.totalParticipants << endl;
     cout << "Waiting Room: " << (meeting.enableWaitingRoom ? "Enabled" : "Disabled") << endl;
+}
+
+string checkConnection(float internetSpeed){
+    if(internetSpeed < 0.5){
+        return "Connection is unstable...";
+    }
+    if(internetSpeed < 1.5){
+        return "Weak Connection. Turn off the camera and use audio only.";
+    }
+    if(internetSpeed < 5.0){
+        return "Connection is stable for standard-quality video only.";
+    }
+
+    return "Connection is stable for high-quality video.";
+}
+
+float dataUsage(float internetSpeed, bool cameraOn, int duration){
+    float bitrate;
+
+    if(!cameraOn || internetSpeed < 1.5){
+        bitrate = 0.1;
+    } else if(internetSpeed < 5.0) {
+        bitrate = 1.5;
+    } else {
+        bitrate = 3.0;
+    }
+
+    float usage = bitrate * duration * 60 / 8;
+
+    return usage / 1024;
+}
+
+void joinMeeting(Meeting meeting, vector<Participant> &participantsList){
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    string meetingId;
+    Participant participant;
+    cout << endl << "= = = = Join a Meeting = = = =" << endl;
+    
+    if(!meeting.scheduled){
+        cout << "Currently no meeting has been scheduled yet!" << endl;
+        return;
+    }
+
+    if(participantsList.size() >= meeting.totalParticipants){
+        cout << "Meeting room is full!" << endl;
+        return;
+    }
+
+    do{
+        meetingId = readString("Enter Meeting ID: ");
+        if(meetingId != meeting.id){
+            cout << "Invalid Meeting ID!" << endl;
+        }
+    }while(meetingId != meeting.id);
+
+    participant.name = readString("Participant name: ");
+    participant.micOn = readYesNo("Turn on the microphone? [Y/N]: ");
+    participant.cameraOn = readYesNo("Turn on the camera? [Y/N]: ");
+    participant.internetSpeed = readFloat("Internet speed (Mbps) (0.1~1000): ", 0.1, 1000);
+
+    participantsList.push_back(participant);
+
+    cout << endl << "= = = = Meeting Info = = = =" << endl;
+    cout << participant.name << " joined the meeting!" << endl;
+    cout << "Connection Result: " << checkConnection(participant.internetSpeed) << endl;
+    float usage = dataUsage(participant.internetSpeed, participant.cameraOn, meeting.duration); 
+    cout << "Estimated Data Usage: " << usage << " GB" << endl;
 }
 
 void mainMenu(){
@@ -128,31 +209,33 @@ void mainMenu(){
 
 int main(){
     Meeting meeting;
-    vector<Participant> participants;
+    vector<Participant> participantsList;
 
     int choice;
-    mainMenu();
-    choice = readNum("Enter your choice (1~5): ", 1, 5);
+    while(true){
+        mainMenu();
+        choice = readNum("Enter your choice (1~5): ", 1, 5);
 
-    switch (choice) {
-        case 1:
-            schedule(meeting, participants);
-            break;
+        switch (choice) {
+            case 1:
+                scheduleMeeting(meeting, participantsList);
+                break;
         
-        case 2:
-            // join meeting
-            break;
+            case 2:
+                joinMeeting(meeting, participantsList);
+                break;
 
-        case 3:
-            // check internet readiness
-            break;
+            case 3:
+                // check internet readiness
+                break;
 
-        case 4:
-            // Meeting summary
-            break;
+            case 4:
+                // Meeting summary
+                break;
         
-        case 5:
-            cout << endl << "Thank you for using the Zoom Meeting Assisteant!!";
-            exit(0);
+            case 5:
+                cout << endl << "Thank you for using the Zoom Meeting Assisteant!!";
+                exit(0);
+        }
     }
 }
